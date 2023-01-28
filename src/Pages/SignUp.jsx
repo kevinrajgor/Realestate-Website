@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { BsEmojiNeutral, BsEmojiSunglasses } from "react-icons/bs";
 import { Link } from "react-router-dom";
 import OAuth from "../Components/OAuth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
+import { db } from "../Firebase";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,12 +20,49 @@ export default function SignUp() {
     password: "",
   });
   const { name, email, password } = formData;
+  const navigate = useNavigate();
 
   function onChange(e) {
     setFormData((prevState) => ({
       ...prevState,
       [e.target.id]: e.target.value,
     }));
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    try {
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      updateProfile(auth.currentUser, {
+        displayName: name,
+      });
+      const user = userCredential.user;
+      const formDataCopy = { ...formData };
+      delete formDataCopy.password;
+      formDataCopy.timestamp = serverTimestamp();
+
+      await setDoc(doc(db, "users", user.uid), formDataCopy);
+      toast.success("Successfully Signed Up!");
+      navigate("/");
+    } catch (error) {
+      if (
+        error.message === "Firebase: Error (auth/invalid-email)." ||
+        error.message === "Firebase: Error (auth/missing-email)."
+      ) {
+        toast.error("Email is Invalid or is Missing!");
+      } else if (
+        error.message === "Firebase: Error (auth/email-already-in-use)."
+      ) {
+        toast.info("Email is already Registered!");
+      } else {
+        toast.error("Password is Missing or is Less than 6 characters!");
+      }
+    }
   }
   return (
     <section>
@@ -30,7 +76,7 @@ export default function SignUp() {
           />
         </div>
         <div className="w-full md:w-[67%] lg:w-[40%] lg:ml-20">
-          <form>
+          <form onSubmit={onSubmit}>
             <input
               className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6"
               type="text"
@@ -38,6 +84,7 @@ export default function SignUp() {
               value={name}
               onChange={onChange}
               placeholder="Full Name.."
+              required
             />
             <input
               className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6"
