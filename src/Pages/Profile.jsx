@@ -19,6 +19,7 @@ export default function Profile() {
 
   function onLogout() {
     auth.signOut();
+    toast.success("You have been Logged Out!");
     navigate("/");
   }
 
