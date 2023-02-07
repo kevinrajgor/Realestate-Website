@@ -54,6 +54,7 @@ export default function CreateListing() {
 
   const params = useParams();
 
+  //If user isn't the user who created the listing, he/she cannot edit the listing
   useEffect(() => {
     if (listing && listing.userRef !== auth.currentUser.uid) {
       toast.error("You cannot edit this Listing!");
@@ -61,6 +62,7 @@ export default function CreateListing() {
     }
   }, [auth.currentUser.uid, listing, navigate]);
 
+  //To fetch the listing based on listingId
   useEffect(() => {
     setLoading(true);
     async function fetchListing() {
