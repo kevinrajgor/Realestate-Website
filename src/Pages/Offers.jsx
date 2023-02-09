@@ -12,7 +12,6 @@ import {
 import { db } from "../Firebase";
 import Spinner from "../Components/Spinner";
 import ListingItem from "../Components/ListingItem";
-import { async } from "@firebase/util";
 
 export default function Offers() {
   const [listings, setListings] = useState(null);
